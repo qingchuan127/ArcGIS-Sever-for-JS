@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draw  Length工具</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Shapes and Symbols</title>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.14/3.14/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.14/3.14/esri/css/esri.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.14/3.14/init.js"></script>
+    <script src="../js/jquery-3.4.1.js"></script>
+
+    <style>
+        html, body, #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+
+        button {
+            display: block;
+        }
+    </style>
+
+    <script>
+        var map, tb;
+        var geometryService;
+        require([
+            "esri/map", "esri/toolbars/draw",
+            "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/PictureFillSymbol", "esri/symbols/CartographicLineSymbol",
+            "esri/graphic",
+            "esri/Color", "dojo/dom", "dojo/on",
+            "esri/layers/ArcGISTiledMapServiceLayer",
+            "esri/tasks/GeometryService", "esri/SpatialReference", "esri/tasks/ProjectParameters", "esri/tasks/LengthsParameters",
+            "dojo/domReady!"
+        ], function (
+            Map, Draw,
+            SimpleMarkerSymbol, SimpleLineSymbol,
+            PictureFillSymbol, CartographicLineSymbol,
+            Graphic,
+            Color, dom, on,
+            ArcGISTiledMapServiceLayer, GeometryService, SpatialReference, ProjectParameters, LengthsParameters
+        ) {
+            map = new Map("mapDiv", {
+                "xmin": 126.08797131337525, "ymin": 41.88483304829672, "xmax": 130.05572254059723, "ymax": 47.20292839632739,
+                "spatialReference": { "wkid": 4326 }
+            });
+            map.on("load", initToolbar);
+            var oilAndGasLayer = new ArcGISTiledMapServiceLayer("http://localhost:6080/arcgis/rest/services/123/MyMapService/MapServer");
+            map.addLayer(oilAndGasLayer);
+
+            geometryService = GeometryService("http://localhost:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+
+            geometryService.on("project-complete", function (graphics) {
+                debugger;
+                //call GeometryService.lengths() with projected geometry
+                var lengthsParameters = new LengthsParameters();
+                lengthsParameters.polylines = graphics.geometries;
+                lengthsParameters.lengthUnit = GeometryService.UNIT_METER;
+                lengthsParameters.geodesic = true;
+                geometryService.lengths(lengthsParameters, function (result) {
+                    document.getElementById("distance").innerHTML = dojo.number.format(result.lengths[0] / 1000) + " kilometers";
+                });
+            });
+
+            function initToolbar() {
+                tb = new Draw(map);
+                tb.on("draw-complete", addGraphic);
+                tb.activate(Draw.FREEHAND_POLYLINE);
+            }
+
+            function addGraphic(result) {
+                map.graphics.clear();
+                map.graphics.add(new Graphic(result.geometry, new SimpleLineSymbol()));
+                var projectParameters = new ProjectParameters();
+                projectParameters.geometries = [result.geometry];
+                projectParameters.outSR = new SpatialReference(4326);
+                geometryService.project(projectParameters);
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div id="mapDiv" style="height: 95%"></div>
+    Distance: <span id="distance"></span>
+</body>
+</html>
