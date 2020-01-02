@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ArcGIS API for JS</title>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.14/3.14/dijit/themes/tundra/tundra.css" />
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.14/3.14/esri/css/esri.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.14/3.14/init.js"></script>
+    <script>
+        require(["esri/map", "esri/layers/ArcGISDynamicMapServiceLayer",
+                    "dojo/domReady!"],
+                function (Map, ArcGISDynamicMapServiceLayer) {
+                    var map = new Map("mapDiv");
+                    //利用url创建一个动态地图服务对象
+                    var layer = new ArcGISDynamicMapServiceLayer("http://localhost:6080/arcgis/rest/services/MyMapService/MapServer");
+                    //将地图服务对象添加到地图容器中
+
+                    
+                    map.addLayer(layer);
+                })
+    </script>
+</head>
+<body class="tundra">
+    <div id="mapDiv" style="width:900px; height:600px; border:1px solid #000;"></div>
+</body>
+</html>
